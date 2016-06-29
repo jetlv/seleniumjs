@@ -1,17 +1,26 @@
-/// <reference path="include.d.ts" />
-
-var csv = require('csv');
+var json2csv = require('json2csv');
 var fs = require('fs');
+var fields = ['car', 'price', 'color'];
+var myCars = [
+  {
+    "car": "Audi",
+    "price": 40000,
+    "color": "blue"
+  }, {
+    "car": "BMW",
+    "price": 35000,
+    "color": "black"
+  }, {
+    "car": "Porsche",
+    "price": 60000,
+    "color": "green"
+  }
+];
 
-csv.generate({seed: 1, columns: 2, length: 20}, function(err, data){
-  csv.parse(data, function(err, data){
-    csv.transform(data, function(data){
-      return data.map(function(value){return value.toUpperCase()});
-    }, function(err, data){
-      csv.stringify(data, function(err, data){
-        process.stdout.write(data);
-        fs.writeFile('csv/out.csv', data);
-      });
-    });
+json2csv({ data: myCars, fields: fields }, function(err, csv) {
+  if (err) console.log(err);
+  fs.writeFile('csv/file.csv', csv, function(err) {
+    if (err) throw err;
+    console.log('file saved');
   });
 });

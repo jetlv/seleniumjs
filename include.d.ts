@@ -9,3 +9,4 @@
 /// <reference path="typings/express/express.d.ts" />
 /// <reference path="typings/jade/jade.d.ts" />
 /// <reference path="typings/mysql/mysql.d.ts" />
+/// <reference path="typings/async/async.d.ts" />
