@@ -3,6 +3,10 @@
 var webdriver = require('selenium-node-webdriver');
 var fs = require('fs');
 
+// var tw = require('selenium-webdriver');
+
+// tw.WebDriver.Window.
+
 function _randomString(len) {
     len = len || 32;
     var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';
@@ -27,7 +31,7 @@ webdriver().
             then(function () {
                 driver.manage().timeouts().implicitlyWait(10000);
                 driver.takeScreenshot().then(function (data) {
-                    fs.writeFile('D:\\screen.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
+                    fs.writeFile('D:\\screenshots\\firstScreen.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
                         if (err) throw err;
                     });
                 });
@@ -47,8 +51,21 @@ webdriver().
                     findElement(driver.webdriver.By.name('Confirm_password')).
                     sendKeys('123456');
             }).then(function () {
-                return driver.
-                    findElement(driver.webdriver.By.xpath("//div[@role='presentation']")).click();
+                driver.takeScreenshot().then(function (data) {
+                    fs.writeFile('D:\\screenshots\\afterInput.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
+                        if (err) throw err;
+                    });
+                });
+            }).then(function () {
+                driver.wait(function () {
+                    console.log('waiting reCaptcha...');
+                    // return driver.isElementPresent(driver.webdriver.By.xpath("//div[@role='presentation']"));
+                    return true;
+                }, 50000);
+            }).then(function () {
+                // return driver.
+                //     findElement(driver.webdriver.By.xpath("//div[@role='presentation']")).click();
+                return true;
             }).then(function () {
                 return driver.
                     findElement(driver.webdriver.By.id('acceptSubscribe')).
@@ -56,18 +73,25 @@ webdriver().
             }).then(function () {
                 return driver.
                     findElement(driver.webdriver.By.xpath("//button[@class='checkBeforeSubmit']")).click();
-            }).then(function () {
-                driver.takeScreenshot().then(function (data) {
-                    fs.writeFile('D:\\screen_final.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
+            }).then(function() {
+                driver.wait(function () {
+                    console.log('waiting registered...');
+                    driver.takeScreenshot().then(function (data) {
+                    fs.writeFile('D:\\screenshots\\screen_waitingRegister.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
                         if (err) throw err;
                     });
-                }).
-                    then(function (results) {
-                        results.forEach(function (result) {
-                            console.log(result);
-                        });
-                        driver.quit();
+                })
+                    return driver.isElementPresent(driver.webdriver.By.xpath("//h3[text()='Finish the process:']"));
+                }, 10000);               
+            }).then(function () {
+                driver.takeScreenshot().then(function (data) {
+                    fs.writeFile('D:\\screenshots\\screen_final.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
+                        if (err) throw err;
                     });
+                })
+            }).
+            then(function () {
+                driver.quit();
             });
     });
 
