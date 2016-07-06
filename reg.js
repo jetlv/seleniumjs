@@ -21,7 +21,7 @@ function _randomString(len) {
 console.log('Misson started');
 webdriver().
     then(function (driver) {
-        driver.get('http://www.tuugo.us/registration').
+        driver.get('').
             then(function () {
                 driver.wait(function () {
                     console.log('waiting form...');
@@ -94,32 +94,3 @@ webdriver().
                 driver.quit();
             });
     });
-
-// webdriver().
-//     then(function (driver) {
-//         driver.get('http://www.tuugo.us/AddYourBusiness').
-//         then(function() {
-//             driver.takeScreenshot().then(function (data) {
-//                     fs.writeFile('D:\\screen.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
-//                         if (err) throw err;
-//                     });
-//                 }); 
-//         }).
-//             then(function () {
-//                 return driver.
-//                     findElement(driver.webdriver.By.name('Password')).
-//                     sendKeys('webdriver');
-//             }).then(function() {
-//                   driver.takeScreenshot().then(function (data) {
-//                     fs.writeFile('D:\\screen.png', data.replace(/^data:image\/png;base64,/, ''), 'base64', function (err) {
-//                         if (err) throw err;
-//                     });
-//                 }); 
-//             });
-//             then(function (results) {
-//                 results.forEach(function (result) {
-//                     console.log(result);
-//                 });
-//                 driver.quit();
-//             });
-//     });

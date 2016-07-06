@@ -5,14 +5,38 @@ var fs = require('fs');
 var screen = require('./toolkits/screenshoter');
 var json2csv = require('json2csv');
 var async = require('async');
+var config = require('./config.js');
 
 var rows = [];
 
+Date.prototype.Format = function (fmt) {
+    var o = {
+        "M+": this.getMonth() + 1,
+        "d+": this.getDate(),
+        "h+": this.getHours(),
+        "m+": this.getMinutes(),
+        "s+": this.getSeconds(),
+        "q+": Math.floor((this.getMonth() + 3) / 3),
+        "S": this.getMilliseconds()
+    };
+    if (/(y+)/.test(fmt))
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt))
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+
 runAppnnie();
-// setInterval(runAppnnie, 1000 * 100);    
+setInterval(runAppnnie, 1000 * 60 * 60 * 24);
 
 function runAppnnie() {
-    console.log('Mission started');
+    // var tm = new Date();
+    // var tmStr = tm.getFullYear().toString() + '_' + tm.getMonth() + '_' + tm.getDate().toString() + '_' + tm.getHours().toString() + '_' + tm.getMinutes().toString() + '_' + tm.getSeconds().toString();
+    var tmStr = new Date().Format('yyyy_MM_dd_hh_mm_ss');
+    console.log('Mission started at ' + tmStr);
+    var sPath = 'screenshots/' + tmStr + '/';
+    fs.mkdirSync(sPath);
     webdriver().
         then(function (driver) {
             driver.get('http://www.appannie.com/account/login/?_ref=header').
@@ -26,31 +50,42 @@ function runAppnnie() {
                     }, 20000);
                 }).
                 then(function () {
-                    screen(driver, 'screenshots/firstScreen.png');
+                    screen(driver, sPath + 'firstScreen.png');
                     return driver.
                         findElement(driver.webdriver.By.xpath('//label[@for="email"]')).
-                        sendKeys('jetlyu@aliyun.com');
+                        sendKeys(config.username);
                 }).then(function () {
-                    screen(driver, 'screenshots/emailEntered.png');
+                    screen(driver, sPath + 'emailEntered.png');
                 }).
                 then(function () {
                     return driver.
                         findElement(driver.webdriver.By.xpath('//label[@for="password"]')).
-                        sendKeys('lc799110');
+                        sendKeys(config.password);
                 }).
                 then(function () {
-                    screen(driver, 'screenshots/passwordEnteted.png');
+                    screen(driver, sPath + 'passwordEnteted.png');
                 }).then(function () {
                     return driver.
                         findElement(driver.webdriver.By.id('submit')).click();
                 }).then(function () {
                     driver.wait(function () {
                         console.log('waiting home page...');
-                        screen(driver, 'screenshots/homePage.png');
+                        screen(driver, sPath + 'homePage.png');
                         return driver.isElementPresent(driver.webdriver.By.name('q'));
                     }, 50000);
                 }).then(function () {
-                    driver.get('https://www.appannie.com/apps/appletv/top-chart/united-states/overall/');
+                    driver.get('https://www.appannie.com/apps/appletv/top-chart/' + config.country + '/overall/?date=' + config.date);
+                    // }).then(function () {
+                    //     return driver.
+                    //         findElement(driver.webdriver.By.xpath('//div[@data-name="country"]')).click();
+                    // }).then(function () {
+                    //         if(config.country) {
+                    //             return driver.
+                    //                 findElement(driver.webdriver.By.xpath('//span[@class="search-input"]/input')).sendKeys(config.country);
+                    //         }
+                    // }).then(function () {
+                    //     return driver.
+                    //         findElement(driver.webdriver.By.xpath('//a[@class="picker-option-button"]')).click();
                 }).then(function () {
                     return driver.
                         findElement(driver.webdriver.By.xpath('//a[@class="load-all"]')).
@@ -60,83 +95,47 @@ function runAppnnie() {
                         console.log('waiting data load...');
                         return driver.isElementPresent(driver.webdriver.By.xpath('//div[@class="aa-load-more-box"][@style="display: none;"]'));
                     }, 50000);
-                    screen(driver, 'screenshots/loadedAll.png');
+                    screen(driver, sPath + 'loadedAll.png');
                 }).then(function () {
                     var elements = driver.findElements(driver.webdriver.By.xpath("//tbody[@id='storestats-top-table']/tr"));
                     return elements;
                 }).
                 then(function (elements) {
                     console.log(elements.length + ' lines total');
-                    fs.writeFile('csv/_file.csv', '"Free","Paid","Popular"\r\n', function (err) {
+                    fs.writeFile('csv/' + tmStr + '.csv', '"Free","Paid","Popular"\r\n', function (err) {
                         if (err) throw err;
                         console.log('It\'s saved!');
                     });
 
-                    // for (var i = 0; i < elements.length; i++) {
-                    //     var num = i + 1;
-                    //     driver.findElement(driver.webdriver.By.xpath("//tbody[@id='storestats-top-table']/tr[" + num + "]//td[1]//div[@class='main-info']//a[1]")).getText().then(function (free) {
-                    //         driver.findElement(driver.webdriver.By.xpath("//tbody[@id='storestats-top-table']/tr[" + num + "]//td[2]//div[@class='main-info']//a[1]")).getText().then(function (paid) {
-                    //             driver.findElement(driver.webdriver.By.xpath("//tbody[@id='storestats-top-table']/tr[" + num + "]//td[3]//div[@class='main-info']//a[1]")).getText().then(function (popular) {
-                    //                 // var row = popular.split('|');
-                    //                 var r = { 'Free': free, 'Paid': paid, 'Popular': popular };
-                    //                 json2csv({ data: r, fields: fields}, function (err, csv) {
-                    //                     if (err) console.log(err);
-                    //                     fs.writeFile('csv/file.csv', csv, function (err) {
-                    //                         if (err) throw err;
-                    //                         console.log('file saved');
-                    //                     });
-                    //                 });
-                    //             });
-                    //         });
-                    //     });
-
-                    // }
                     for (var i in elements) {
                         var e = elements[i], ra = [], free, paid, popular;
 
-
                         e.findElement(driver.webdriver.By.xpath(".//td[1]//div[@class='main-info']//a[1]/parent::span")).getAttribute('title').then(function (title) {
-                            fs.appendFileSync('csv/_file.csv', '"' + title + '",', function (err) {
+                            fs.appendFileSync('csv/' + tmStr + '.csv', '"' + title + '",', { encoding: 'utf-8' }, function (err) {
                                 if (err) throw err;
-                                console.log('It\'s saved!');
+
                             });
                         });
-                        e.findElement(driver.webdriver.By.xpath(".//td[2]//div[@class='main-info']//a[1]/parent::span")).getAttribute('title').then(function (title) {
-                            fs.appendFileSync('csv/_file.csv', '"' + title + '",', function (err) {
+
+
+                        e.findElement(driver.webdriver.By.xpath(".//td[2]//div[@class='main-info']//a[1]/parent::span | .//td[2][@class='empty-cell']")).getAttribute('title').then(function (title) {
+                            // console.log(title ? title : '');
+                            fs.appendFileSync('csv/' + tmStr + '.csv', '"' + (title ? title : 'N0NE') + '",', { encoding: 'utf-8' }, function (err) {
                                 if (err) throw err;
-                                console.log('It\'s saved!');
                             });
 
-                            
-                            
                         });
+
                         e.findElement(driver.webdriver.By.xpath(".//td[3]//div[@class='main-info']//a[1]/parent::span")).getAttribute('title').then(function (title) {
-                            fs.appendFileSync('csv/_file.csv', '"' + title + '"\r\n', function (err) {
+                            fs.appendFileSync('csv/' + tmStr + '.csv', '"' + title + '"\r\n', { encoding: 'utf-8' }, function (err) {
                                 if (err) throw err;
-                                console.log('It\'s saved!');
+
                             });
                         });
-                        // paid = e.findElement(driver.webdriver.By.xpath(".//td[2]//div[@class='main-info']//a[1]/parent::span")).getAttribute('title');
-                        // popular = e.findElement(driver.webdriver.By.xpath(".//td[3]//div[@class='main-info']//a[1]/parent::span")).getAttribute('title');
-
-                        // e.findElement(driver.webdriver.By.xpath(".//td[2]//div[@class='main-info']//a[1]")).getText().then(function (text) {
-
-                        // });
-                        // e.findElement(driver.webdriver.By.xpath(".//td[3]//div[@class='main-info']//a[1")).getText().then(function (text) {
-                        //     popular = text;
-                        // });
-
-                        // var r = 
-                        // console.log('free ' + free + ', paid ' + paid + ' ,popular ' + popular + ' got');
+                            ////do nothing put append empty string
+                            // fs.appendFileSync('csv/' + tmStr + '.csv', '"",', { encoding: 'utf-8' });
                     }
-                // }).then(function (results) {
-                //     json2csv({ data: results[1], fields: results[0] }, function (err, csv) {
-                //         if (err) console.log(err);
-                //         fs.writeFile('csv/file.csv', csv, function (err) {
-                //             if (err) throw err;
-                //             console.log('file saved');
-                //         });
-                //     });
+
                 }).then(function () {
                     driver.quit();
                     console.log('Mission completed');
