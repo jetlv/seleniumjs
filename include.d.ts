@@ -10,3 +10,4 @@
 /// <reference path="typings/jade/jade.d.ts" />
 /// <reference path="typings/mysql/mysql.d.ts" />
 /// <reference path="typings/async/async.d.ts" />
+/// <reference path="typings/request/request.d.ts" />
